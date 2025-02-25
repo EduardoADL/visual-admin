@@ -3,46 +3,70 @@ import BannersTabs from "./tabs/BannersTabs";
 import PlansTab from "./tabs/PlansTab";
 import ContactsTab from "./tabs/ContactsTab";
 import ServicesTab from "./tabs/ServicesTab";
+import RatingTab from "./tabs/RatingTab";
+import { useAuth } from "@/context/AuthContext";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
-type TTabs = "Planos" | "Banners" | "Contatos" | "Serviços";
 
-const tabs: Array<TTabs> = ["Planos", "Banners", "Contatos", "Serviços"];
+type TTabs = "Planos" | "Banners" | "Contatos" | "Servicos" | "Avaliacao";
+
+const tabs: Array<TTabs> = ["Planos", "Banners", "Contatos", "Servicos", "Avaliacao"];
+
 
 const LandingPage = () => {
     const [activeTab, setActiveTab] = useState<TTabs>("Planos");
 
+    const { logout } = useAuth();
+
     return (
         <>
-            <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center">
-                <div className="w-full max-w-full sm:max-w-4xl bg-white rounded-2xl p-6 shadow-md">
-                    <h2 className="text-lg sm:text-2xl font-semibold text-gray-800 text-center mb-4">
-                        Gerenciamento de Conteúdo
-                    </h2>
+            <SidebarProvider>
+                <Sidebar variant="floating">
+                    <SidebarContent>
+                        <SidebarGroup>
+                            <SidebarGroupLabel>Paginas</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <SidebarMenu>
+                                    {tabs.map((item, index) => (
+                                        <SidebarMenuItem key={index}>
+                                            <SidebarMenuButton onClick={() => setActiveTab(item)} className="cursor-pointer" asChild isActive={activeTab === item}>
+                                                <span className={`hover:text-white ${activeTab === item ? 'text-white' : ''}`}>{item}</span>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    ))}
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild className="hover:bg-red-400 active:bg-red-400" onClick={() => logout()}>
+                                            <a className="bg-red-400 cursor-pointer" >
+                                                <span className="text-white">Sair</span>
+                                            </a>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                </SidebarMenu>
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    </SidebarContent>
+                </Sidebar>
+                <SidebarTrigger />
+                <main className="w-full">
+                    <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center">
+                        <div className="w-full max-w-full sm:max-w-4xl bg-white rounded-2xl p-6 shadow-md">
 
-                    <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-4">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab}
-                                className={`px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base ${activeTab === tab ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"
-                                    }`}
-                                onClick={() => setActiveTab(tab)}
-                            >
-                                {tab}
-                            </button>
-                        ))}
+                            {
+                                activeTab === "Banners" ? (
+                                    <BannersTabs />
+                                ) : activeTab === "Planos" ? (
+                                    <PlansTab />
+                                ) : activeTab === "Contatos" ? (
+                                    <ContactsTab />
+                                ) : activeTab === "Servicos" ? (
+                                    <ServicesTab />
+                                ) : <RatingTab />
+                            }
+
+                        </div>
                     </div>
-                    {
-                        activeTab === "Banners" ? (
-                            <BannersTabs />
-                        ) : activeTab === "Planos" ? (
-                            <PlansTab />
-                        ) : activeTab === "Contatos" ? (
-                            <ContactsTab />
-                        ) : <ServicesTab />
-                    }
-
-                </div>
-            </div>
+                </main>
+            </SidebarProvider>
         </>
     );
 };

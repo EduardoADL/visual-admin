@@ -5,6 +5,8 @@ import LayoutTable from "../../../components/LayoutTable";
 import { toast } from "react-toastify";
 import { ContactService } from "../../../services/ContactService";
 import { IContact, IContactReponse } from "../../../interfaces/ContactsINterface";
+import { hasEmptyOrZero } from "../../../utils";
+
 
 const ContactsTab = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,6 +30,10 @@ const ContactsTab = () => {
 
 
     const createContacts = async () => {
+        if (hasEmptyOrZero(dataContactsCreate)) {
+            toast(`Preencha todos os campos!`, { type: "warning" })
+            return
+        }
         try {
             const response = await ContactService.postContacts(dataContactsCreate);
             if (response) {
@@ -45,8 +51,12 @@ const ContactsTab = () => {
     }
 
     const updateContact = async () => {
+        const toSend: IContact = { ...dataContactsCreate }
+        if (hasEmptyOrZero(toSend)) {
+            toast(`Preencha todos os campos!`, { type: "warning" })
+            return
+        }
         try {
-            const toSend: IContact = { ...dataContactsCreate }
             const response = await ContactService.putContacts(toSend, idEdit)
             if (response) {
                 setIsModalOpen(false)
@@ -99,6 +109,22 @@ const ContactsTab = () => {
         }
     }
 
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value.replace(/\D/g, "");
+
+        if (value.length > 10) {
+            value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7, 11)}`;
+        } else if (value.length > 6) {
+            value = `(${value.slice(0, 2)}) ${value.slice(2, 6)}-${value.slice(6, 10)}`;
+        } else if (value.length > 2) {
+            value = `(${value.slice(0, 2)}) ${value.slice(2, 6)}`;
+        } else if (value.length > 0) {
+            value = `(${value}`;
+        }
+
+        setDataContactsCreate({ ...dataContactsCreate, mobile_phone: value });
+    };
+
 
     const executeMethod = () => {
         if (isEdit) {
@@ -122,9 +148,9 @@ const ContactsTab = () => {
                     <div className="flex flex-col items-start gap-1">
                         <p className="text-sm ">Celular:</p>
                         <input
-                            type="number"
-                            className="h-8 w-10/12 border border-black rounded px-2"
-                            onChange={(text) => setDataContactsCreate({ ...dataContactsCreate, mobile_phone: text.target.value })}
+                            type="text"
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full"
+                            onChange={handlePhoneChange}
                             value={dataContactsCreate.mobile_phone}
                         />
                     </div>
@@ -132,7 +158,7 @@ const ContactsTab = () => {
                         <p className="text-sm ">E-mail:</p>
                         <input
                             type="text"
-                            className="h-8 w-10/12 border border-black rounded px-2"
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full"
                             onChange={(text) => setDataContactsCreate({ ...dataContactsCreate, email: text.target.value })}
                             value={dataContactsCreate.email}
                         />
@@ -141,7 +167,7 @@ const ContactsTab = () => {
                         <p className="text-sm ">Endereço</p>
                         <input
                             type="text"
-                            className="h-8 w-10/12 border border-black rounded px-2"
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full"
                             onChange={(text) => setDataContactsCreate({ ...dataContactsCreate, address: text.target.value })}
                             value={dataContactsCreate.address}
                         />
@@ -150,24 +176,24 @@ const ContactsTab = () => {
                         <p className="text-sm ">Telefone Fixo:</p>
                         <input
                             type="text"
-                            className="h-8 w-10/12 border border-black rounded px-2"
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full"
                             onChange={(text) => setDataContactsCreate({ ...dataContactsCreate, landline: text.target.value })}
                             value={dataContactsCreate.landline}
                         />
                     </div>
                     <div className="flex flex-col items-start gap-1 mt-2">
 
-                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-blue-600 text-white mt-4 hover:bg-blue-700" onClick={() => executeMethod()}>
+                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-purple-600 text-white mt-4 hover:bg-purple-700" onClick={() => executeMethod()}>
                             {isEdit ? 'Editar' : 'Adicionar'}
                         </button>
-                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-white text-blue-700 mt-4 hover:bg-gray-200 border border-blue-700" onClick={() => setIsModalOpen(false)}>
+                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-white text-purple-700 mt-4 hover:bg-gray-200 border border-purple-700" onClick={() => setIsModalOpen(false)}>
                             Cancelar
                         </button>
                     </div>
                 </div>
             </Modal>
             <button
-                className="flex items-center gap-2 bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg mb-4 hover:bg-blue-700"
+                className="flex items-center gap-2 bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg mb-4 hover:bg-purple-700"
                 onClick={() => creatOrEdit(true)}
             >
                 <PlusCircle size={20} /> <span className="hidden sm:inline">Adicionar Novo</span>
@@ -177,7 +203,7 @@ const ContactsTab = () => {
                     <tr key={item.id} className="border-b hover:bg-gray-100">
                         <td className="p-2 sm:p-3">{item.email + " - " + item.mobile_phone}</td>
                         <td className="p-2 sm:p-3 flex justify-end gap-2">
-                            <button className="text-blue-600 hover:text-blue-800" onClick={() => creatOrEdit(false, index)}>
+                            <button className="text-purple-600 hover:text-blue-800" onClick={() => creatOrEdit(false, index)}>
                                 <Edit size={18} />
                             </button>
                             <button

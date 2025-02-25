@@ -5,13 +5,17 @@ import LayoutTable from "../../../components/LayoutTable";
 import { toast } from "react-toastify";
 import { PlanService } from "../../../services/PlansService";
 import { IPlan, IPlanResponse } from "../../../interfaces/PlansInterface";
-import { maskCurrency, unmaskCurrency } from "../../../utils";
+import { hasEmptyOrZero, maskCurrency, unmaskCurrency } from "../../../utils";
+import { TableCell, TableRow } from "@/components/ui/table";
 
 const PlansTab = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [dataPlans, setDataPlans] = useState<IPlanResponse[]>([])
     const [isEdit, setIsEdit] = useState<boolean>(false);
     const [idEdit, setIdEdit] = useState<number>(0);
+    const [text, setText] = useState("");
+    const [items, setItems] = useState<string[]>([]);
+
     const [dataPlansCreate, setDataPlansCreate] = useState<IPlan>({
         mega_quantity: 0,
         plan_type: "RESIDENTIAL",
@@ -29,8 +33,13 @@ const PlansTab = () => {
 
 
     const createBanners = async () => {
+        const toSend = { ...dataPlansCreate, description: items.join(", ") }
+        if (hasEmptyOrZero(toSend)) {
+            toast(`Preencha todos os campos!`, { type: "warning" })
+            return
+        }
         try {
-            const response = await PlanService.postPlan(dataPlansCreate)
+            const response = await PlanService.postPlan(toSend)
             if (response) {
                 setIsModalOpen(false)
                 toast("Item criado com sucesso!", { type: "success" })
@@ -46,8 +55,12 @@ const PlansTab = () => {
     }
 
     const updateBanner = async () => {
+        const toSend: IPlan = { ...dataPlansCreate, description: items.join(", ") }
+        if (hasEmptyOrZero(toSend)) {
+            toast(`Preencha todos os campos!`, { type: "warning" })
+            return
+        }
         try {
-            const toSend: IPlan = { ...dataPlansCreate }
             const response = await PlanService.putPlan(toSend, idEdit)
             if (response) {
                 setIsModalOpen(false)
@@ -72,6 +85,7 @@ const PlansTab = () => {
                 value: 0,
                 description: ""
             })
+            setItems([])
             setIsEdit(false)
             setIsModalOpen(true)
         } else {
@@ -79,6 +93,8 @@ const PlansTab = () => {
             const plan = dataPlans[index]
             setIdEdit(plan.id)
             setDataPlansCreate(plan)
+            const itemsInput = plan.description.split(",").map(item => item.trim()).filter(item => item !== "");
+            setItems(itemsInput)
             setIsEdit(true)
             setIsModalOpen(true)
         }
@@ -102,6 +118,24 @@ const PlansTab = () => {
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const numericValue = unmaskCurrency(event.target.value);
         setDataPlansCreate({ ...dataPlansCreate, value: numericValue });
+    };
+
+    const addItem = () => {
+        if (text.trim() !== "") {
+            setItems((prev) => [...prev, text.trim()]);
+            setText("");
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            addItem();
+        }
+    };
+
+    const removeItem = (itemToRemove: string) => {
+        setItems((prev) => prev.filter(item => item !== itemToRemove));
     };
 
 
@@ -128,7 +162,7 @@ const PlansTab = () => {
                         <p className="text-sm ">Megas:</p>
                         <input
                             type="number"
-                            className="h-8 w-10/12 border border-black rounded px-2"
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full"
                             onChange={(text) => setDataPlansCreate({ ...dataPlansCreate, mega_quantity: parseInt(text.target.value) })}
                             value={dataPlansCreate.mega_quantity}
                         />
@@ -137,25 +171,52 @@ const PlansTab = () => {
                         <p className="text-sm ">Valor:</p>
                         <input
                             type="text"
-                            className="h-8 w-10/12 border border-black rounded px-2"
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full"
+                            placeholder="R$ 0,00"
                             onChange={handleChange}
                             value={dataPlansCreate.value === 0 ? "" : maskCurrency(dataPlansCreate.value)}
                         />
                     </div>
                     <div className="flex flex-col items-start gap-1 mt-2">
-                        <p className="text-sm ">Descrição</p>
+                        <p className="text-sm ">Diferênciais:</p>
                         <input
                             type="text"
-                            className="h-8 w-10/12 border border-black rounded px-2"
-                            onChange={(text) => setDataPlansCreate({ ...dataPlansCreate, description: text.target.value })}
-                            value={dataPlansCreate.description}
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full"
+                            placeholder="Digite um item e pressione Enter"
                         />
+                        <button
+                            onClick={addItem}
+                            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition mt-2"
+                        >
+                            Adicionar
+                        </button>
+                        {items.length > 0 && (
+                            <div className="text-gray-700">
+                                <p>Itens:</p>
+                                <ul className="flex flex-row flex-wrap gap-3 mt-1">
+                                    {items.map((item) => (
+                                        <li key={item} className="flex justify-between items-center gap-2 bg-gray-200 px-2 rounded-lg">
+                                            <span>{item}</span>
+                                            <button
+                                                onClick={() => removeItem(item)}
+                                                className="cursor-pointer text-black text-center rounded-lg hover:bg-gray-300 transition"
+                                            >
+                                                x
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
-                    <div className="flex flex-col items-start gap-1 mt-2">
+                    <div className="flex flex-col items-start gap-1 mt-6">
                         <label htmlFor="select" className="text-sm">Escolha uma opção:</label>
                         <select
                             id="select"
-                            className="h-8 w-10/12 border border-black rounded px-2"
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full"
                             value={dataPlansCreate.plan_type}
                             onChange={(e) => setDataPlansCreate({ ...dataPlansCreate, plan_type: e.target.value })}
                         >
@@ -166,37 +227,38 @@ const PlansTab = () => {
                     </div>
                     <div className="flex flex-col items-start gap-1 mt-2">
 
-                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-blue-600 text-white mt-4 hover:bg-blue-700" onClick={() => executeMethod()}>
+                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-purple-600 text-white mt-4 hover:bg-purple-700" onClick={() => executeMethod()}>
                             {isEdit ? 'Editar' : 'Adicionar'}
                         </button>
-                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-white text-blue-700 mt-4 hover:bg-gray-200 border border-blue-700" onClick={() => setIsModalOpen(false)}>
+                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-white text-purple-700 mt-4 hover:bg-gray-200 border border-purple-700" onClick={() => setIsModalOpen(false)}>
                             Cancelar
                         </button>
                     </div>
                 </div>
             </Modal>
             <button
-                className="flex items-center gap-2 bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg mb-4 hover:bg-blue-700"
+                className="flex items-center gap-2 bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg mb-4 hover:bg-purple-700"
                 onClick={() => creatOrEdit(true)}
             >
                 <PlusCircle size={20} /> <span className="hidden sm:inline">Adicionar Novo</span>
             </button>
             <LayoutTable>
                 {dataPlans.map((item, index) => (
-                    <tr key={item.id} className="border-b hover:bg-gray-100">
-                        <td className="p-2 sm:p-3">{item.mega_quantity + " MEGAS"}</td>
-                        <td className="p-2 sm:p-3 flex justify-end gap-2">
-                            <button className="text-blue-600 hover:text-blue-800" onClick={() => creatOrEdit(false, index)}>
+                    <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.mega_quantity + " MEGAS"}</TableCell>
+
+                        <TableCell className="text-right">
+                            <button className="text-black hover:text-black-80 cursor-pointer" onClick={() => creatOrEdit(false, index)}>
                                 <Edit size={18} />
                             </button>
                             <button
-                                className="text-red-600 hover:text-red-800"
+                                className="text-black hover:text-black-80 cursor-pointer ms-1"
                                 onClick={() => deleteBanner(item.id)}
                             >
                                 <Trash2 size={18} />
                             </button>
-                        </td>
-                    </tr>
+                        </TableCell>
+                    </TableRow>
                 ))}
             </LayoutTable>
         </>

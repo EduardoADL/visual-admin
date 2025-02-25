@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import Modal from "../../../components/Modal";
-import { PlusCircle, Trash2, Edit } from "lucide-react";
+import { Edit } from "lucide-react";
 import LayoutTable from "../../../components/LayoutTable";
 import { toast } from "react-toastify";
 import { IService, IServiceResponse } from "../../../interfaces/ServiceInterface";
 import { ServiceService } from "../../../services/ServiceService";
+import { hasEmptyOrZero } from "../../../utils";
 
 
 const ServicesTab = () => {
@@ -26,26 +27,30 @@ const ServicesTab = () => {
     };
 
 
-    const createService = async () => {
-        try {
-            const response = await ServiceService.postService(dataServiceCreate);
-            if (response) {
-                setIsModalOpen(false)
-                toast("Item criado com sucesso!", { type: "success" })
-                getService()
-            }
-        } catch (error) {
-            const errorReturn = error as { code?: number, message?: string, status?: number }
-            if (errorReturn && errorReturn.status === 401) {
-                window.location.href = "/login";
-            }
-            toast(`${errorReturn && errorReturn.message ? errorReturn.message : 'Erro ao tentar criar contato'}`, { type: "error" })
-        }
-    }
+    // const createService = async () => {
+    //     try {
+    //         const response = await ServiceService.postService(dataServiceCreate);
+    //         if (response) {
+    //             setIsModalOpen(false)
+    //             toast("Item criado com sucesso!", { type: "success" })
+    //             getService()
+    //         }
+    //     } catch (error) {
+    //         const errorReturn = error as { code?: number, message?: string, status?: number }
+    //         if (errorReturn && errorReturn.status === 401) {
+    //             window.location.href = "/login";
+    //         }
+    //         toast(`${errorReturn && errorReturn.message ? errorReturn.message : 'Erro ao tentar criar contato'}`, { type: "error" })
+    //     }
+    // }
 
     const updateService = async () => {
+        const toSend: IService = { ...dataServiceCreate }
+        if (hasEmptyOrZero(toSend)) {
+            toast(`Preencha todos os campos!`, { type: "warning" })
+            return
+        }
         try {
-            const toSend: IService = { ...dataServiceCreate }
             const response = await ServiceService.putService(toSend, idEdit)
             if (response) {
                 setIsModalOpen(false)
@@ -80,28 +85,28 @@ const ServicesTab = () => {
         }
     }
 
-    const deleteService = async (id: number) => {
-        try {
-            const response = await ServiceService.deleteService(id);
-            if (response) {
-                toast("Item excluido com sucesso!", { type: "success" })
-                getService();
-            }
-        } catch (error) {
-            const errorReturn = error as { code?: number, message?: string, status?: number }
-            if (errorReturn && errorReturn.status === 401) {
-                window.location.href = "/login";
-            }
-            toast(`${errorReturn && errorReturn.message ? errorReturn.message : 'Erro ao tentar excluir'}`, { type: "error" })
-        }
-    }
+    // const deleteService = async (id: number) => {
+    //     try {
+    //         const response = await ServiceService.deleteService(id);
+    //         if (response) {
+    //             toast("Item excluido com sucesso!", { type: "success" })
+    //             getService();
+    //         }
+    //     } catch (error) {
+    //         const errorReturn = error as { code?: number, message?: string, status?: number }
+    //         if (errorReturn && errorReturn.status === 401) {
+    //             window.location.href = "/login";
+    //         }
+    //         toast(`${errorReturn && errorReturn.message ? errorReturn.message : 'Erro ao tentar excluir'}`, { type: "error" })
+    //     }
+    // }
 
 
     const executeMethod = () => {
         if (isEdit) {
             updateService()
         } else {
-            createService()
+            // createService()
         }
     }
 
@@ -120,7 +125,7 @@ const ServicesTab = () => {
                         <p className="text-sm ">Título:</p>
                         <input
                             type="text"
-                            className="h-8 w-10/12 border border-black rounded px-2"
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full"
                             onChange={(text) => setDataServiceCreate({ ...dataServiceCreate, title: text.target.value })}
                             value={dataServiceCreate.title}
                         />
@@ -129,7 +134,7 @@ const ServicesTab = () => {
                         <p className="text-sm ">Descrição:</p>
                         <input
                             type="text"
-                            className="h-8 w-10/12 border border-black rounded px-2"
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full"
                             onChange={(text) => setDataServiceCreate({ ...dataServiceCreate, description: text.target.value })}
                             value={dataServiceCreate.description}
                         />
@@ -137,35 +142,35 @@ const ServicesTab = () => {
 
                     <div className="flex flex-col items-start gap-1 mt-2">
 
-                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-blue-600 text-white mt-4 hover:bg-blue-700" onClick={() => executeMethod()}>
+                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-purple-600 text-white mt-4 hover:bg-purple-700" onClick={() => executeMethod()}>
                             {isEdit ? 'Editar' : 'Adicionar'}
                         </button>
-                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-white text-blue-700 mt-4 hover:bg-gray-200 border border-blue-700" onClick={() => setIsModalOpen(false)}>
+                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-white text-purple-700 mt-4 hover:bg-gray-200 border border-purple-700" onClick={() => setIsModalOpen(false)}>
                             Cancelar
                         </button>
                     </div>
                 </div>
             </Modal>
-            <button
-                className="flex items-center gap-2 bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg mb-4 hover:bg-blue-700"
+            {/* <button
+                className="flex items-center gap-2 bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg mb-4 hover:bg-purple-700"
                 onClick={() => creatOrEdit(true)}
             >
                 <PlusCircle size={20} /> <span className="hidden sm:inline">Adicionar Novo</span>
-            </button>
+            </button> */}
             <LayoutTable>
                 {dataService.map((item, index) => (
                     <tr key={item.id} className="border-b hover:bg-gray-100">
                         <td className="p-2 sm:p-3">{item.title}</td>
                         <td className="p-2 sm:p-3 flex justify-end gap-2">
-                            <button className="text-blue-600 hover:text-blue-800" onClick={() => creatOrEdit(false, index)}>
+                            <button className="text-purple-600 hover:text-blue-800" onClick={() => creatOrEdit(false, index)}>
                                 <Edit size={18} />
                             </button>
-                            <button
+                            {/* <button
                                 className="text-red-600 hover:text-red-800"
                                 onClick={() => deleteService(item.id)}
                             >
                                 <Trash2 size={18} />
-                            </button>
+                            </button> */}
                         </td>
                     </tr>
                 ))}

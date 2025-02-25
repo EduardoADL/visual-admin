@@ -5,6 +5,7 @@ import { BannersService } from "../../../services/BannersService";
 import { IBanner, IBannersResponse } from "../../../interfaces/BannersInterface";
 import LayoutTable from "../../../components/LayoutTable";
 import { toast } from "react-toastify";
+import { hasEmptyOrZero } from "../../../utils";
 
 const BannersTabs = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,6 +33,10 @@ const BannersTabs = () => {
     };
 
     const createBanners = async () => {
+        if (hasEmptyOrZero(dataBannersCreate)) {
+            toast(`Preencha todos os campos!`, { type: "warning" })
+            return
+        }
         try {
             const response = await BannersService.postBanner(dataBannersCreate)
             if (response) {
@@ -49,8 +54,12 @@ const BannersTabs = () => {
     }
 
     const updateBanner = async () => {
+        const toSend: IBanner = { ...dataBannersCreate, image: typeof dataBannersCreate.name === "string" ? null : dataBannersCreate.image }
+        if (hasEmptyOrZero(toSend)) {
+            toast(`Preencha todos os campos!`, { type: "warning" })
+            return
+        }
         try {
-            const toSend: IBanner = { ...dataBannersCreate, image: typeof dataBannersCreate.name === "string" ? null : dataBannersCreate.image }
             const response = await BannersService.putBanner(toSend, idEdit)
             if (response) {
                 setIsModalOpen(false)
@@ -121,7 +130,7 @@ const BannersTabs = () => {
                         <p className="text-sm ">Nome da imagem:</p>
                         <input
                             type="text"
-                            className="h-8 w-10/12 border border-black rounded px-2"
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full"
                             onChange={(text) => setDataBannersCreate({ ...dataBannersCreate, name: text.target.value })}
                             value={dataBannersCreate.name}
                         />
@@ -132,7 +141,7 @@ const BannersTabs = () => {
                             type="file"
                             accept="image/*"
                             onChange={handleImageChange}
-                            className="h-8 w-10/12 border border-black rounded px-2 cursor-pointer"
+                            className="border border-gray-300 p-2 rounded-lg flex-1 w-full cursor-pointer"
                         />
                         {dataBannersCreate && dataBannersCreate.image && (
                             <div>
@@ -144,17 +153,17 @@ const BannersTabs = () => {
                                 />
                             </div>
                         )}
-                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-blue-600 text-white mt-4 hover:bg-blue-700" onClick={() => executeMethod()}>
+                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-purple-600 text-white mt-4 hover:bg-purple-700" onClick={() => executeMethod()}>
                             {isEdit ? 'Editar' : 'Adicionar'}
                         </button>
-                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-white text-blue-700 mt-4 hover:bg-gray-200 border border-blue-700" onClick={() => setIsModalOpen(false)}>
+                        <button className="cursor-pointer w-full px-4 py-2 rounded-lg bg-white text-purple-700 mt-4 hover:bg-gray-200 border border-purple-700" onClick={() => setIsModalOpen(false)}>
                             Cancelar
                         </button>
                     </div>
                 </div>
             </Modal>
             <button
-                className="flex items-center gap-2 bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg mb-4 hover:bg-blue-700"
+                className="flex items-center gap-2 bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg mb-4 hover:bg-purple-700"
                 onClick={() => creatOrEdit(true)}
             >
                 <PlusCircle size={20} /> <span className="hidden sm:inline">Adicionar Novo</span>
@@ -164,7 +173,7 @@ const BannersTabs = () => {
                     <tr key={item.id} className="border-b hover:bg-gray-100">
                         <td className="p-2 sm:p-3">{item.name}</td>
                         <td className="p-2 sm:p-3 flex justify-end gap-2">
-                            <button className="text-blue-600 hover:text-blue-800" onClick={() => creatOrEdit(false, index)}>
+                            <button className="text-purple-600 hover:text-blue-800" onClick={() => creatOrEdit(false, index)}>
                                 <Edit size={18} />
                             </button>
                             <button
